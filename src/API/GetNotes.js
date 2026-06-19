@@ -99,18 +99,37 @@ export async function updateNote(token, id, noteData) {
 }
 
 
-export async function createNote(token, noteData){
-  const response = await fetch(`${BASE_URL}/createnote`,{
-    method:"POST",
-    headers:{
-      "Authorization" : `Bearer ${token}`,
-      "Content-Type" : "application/json"
+export async function createNote(token, noteData, files = []) {
+  const formData = new FormData();
+  formData.append('title', noteData.title);
+  formData.append('content', noteData.content);
+  files.forEach(file => formData.append('files', file));
+
+  const response = await fetch(`${BASE_URL}/createnote`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`
+      // Do NOT set Content-Type — browser sets it with the multipart boundary
     },
-    body: JSON.stringify(noteData)
+    body: formData
   });
   const data = await response.json();
-  if(!response.ok){
+  if (!response.ok) {
     throw new Error(data.message || "Failed to create notes");
+  }
+  return data;
+}
+
+export async function deleteFile(token, noteId, filename) {
+  const response = await fetch(`${BASE_URL}/note/${noteId}/file/${filename}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to delete file");
   }
   return data;
 }
